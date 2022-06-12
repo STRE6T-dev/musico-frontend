@@ -1,18 +1,19 @@
 import * as React from 'react';
 import {StyleSheet, View, Text,TextInput,Button,Image,Pressable} from 'react-native';
 import Constants from 'expo-constants';
-
+import MainScreen from './screens/main'
 	
-export default class LoginApp extends React.Component{
+export default class LoginScreen extends React.Component{
 	state = {
 		username: '',
 		password: '',
+		err: '',
 		isFormValid: false,
 	}
 
 	componentDidUpdate(prevProps,prevState){
 		if(this.state.username !== prevState.username ){
-			this.validateForm
+			this.handler
 		}
 	}
 
@@ -20,42 +21,24 @@ export default class LoginApp extends React.Component{
 		this.setState({[key]: val})
 	}
 
-	handleSubmit= () =>{
-		console.log("Working ${this.state.username.length}",this.state.username.length)
-		if(this.state.username.length > 0 && this.state.password.length >= 8)
-		{
-			fetch('http://localhost:8080/api/login',{
-				method: 'POST',
-				headers: {'content-type': 'application/json'},
-				body: JSON.stringify({username: this.state.username,password:this.state.password})
-			})
-			console.log("Submitting")
-		}else{
-
-			console.log("Error happend")
+	_login = async () => {
+		try{
+			const success = await login(this.state.username,this.state.password)
+			this.props.navigation.navigate('Main')
+		}catch(err){
+			const errMessage = err.message
+			this.setState({err: errMessage})
 		}
-
-
 	}
 
-	validateForm(){
-		if(this.state.username.length > 0 && this.state.password.length > 8){
-			this.setState({
-				isFormValid: false,
-			})}
-			else{
-				this.setState({
-					isFormValid: true,
-				})
-			}
-					   
-	}
+
 
 	render(){
 		return(
 			<View style={styles.appContainer}>
 				<Image	style={styles.image}
 					source={require('./login.png')} />
+				<Text style={styles.error}>{this.state.err} </Text>
 
 				<Text style={{marginBottom: 30,color: 'white',fontSize: 26}}>Login</Text>			
 
@@ -68,9 +51,10 @@ export default class LoginApp extends React.Component{
 				<TextInput style={styles.input}
 					onChangeText= {this.getHandler("password")}
 					value = {this.state.password}
+					secureTextEntry={true}
 					placeholder="Type passsword"/>
 
-				 <Pressable style={styles.button} onPress={this.handleSubmit} disabled={this.state.isFormValid}>
+				 <Pressable style={styles.button} onPress={this._login} disabled={this.state.isFormValid}>
 			     	 <Text style={styles.text}>Login</Text>
    				 </Pressable>
 
@@ -91,6 +75,10 @@ const styles = StyleSheet.create({
 		resizeMode: 'stretch',
 		marginBottom: 30,
 	},
+	error:{
+		color: 'red'
+		fontSize: 10
+	}
 
 	text: {
 		color: 'white'
